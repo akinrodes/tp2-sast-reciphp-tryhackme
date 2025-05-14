@@ -2,7 +2,8 @@
 
 ---
 title: Remédiation XSS & SQL Injection sur showrecipe.inc.php
-author: toto
+author: Claude MONWENAGNI
+
 date: 2025-05-14
 project: DevSecOps PHP Challenge
 source:
