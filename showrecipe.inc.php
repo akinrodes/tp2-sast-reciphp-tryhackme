@@ -3,20 +3,22 @@
 <div id='preview'><?php
 
 
-$recipeid = $_GET['id'];
+$recipeid = (int)$_GET['id'];
+$safe_recipeid = htmlentities($recipeid, ENT_QUOTES, 'UTF-8');
 
-$query = "SELECT title,poster,shortdesc,ingredients,directions from recipes where recipeid = $recipeid";
-
-$result = mysql_query($query) or die('Could not find recipe');
-$row = mysql_fetch_array($result, MYSQL_ASSOC) or die('No records retrieved');
+// Récupération de la recette (PDO, requête préparée)
+$stmt = $pdo->prepare("SELECT title,poster,shortdesc,ingredients,directions FROM recipes WHERE recipeid = :recipeid");
+$stmt->bindParam(':recipeid', $recipeid, PDO::PARAM_INT);
+$stmt->execute();
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$row) {
+    die('No records retrieved');
+}
 $title = $row['title'];
 $poster = $row['poster'];
 $shortdesc = $row['shortdesc'];
-$ingredients = $row['ingredients'];
-$directions = $row['directions'];
-
-$ingredients = nl2br($ingredients);
-$directions = nl2br($directions);
+$ingredients = nl2br($row['ingredients']);
+$directions = nl2br($row['directions']);
 
 echo "<h2>$title</h2>\n";
 
@@ -29,22 +31,24 @@ echo "<h3>Directions:</h3>\n";
 echo $directions . "\n";
 echo "<br><br>\n";
 
-$query = "SELECT count(commentid) from comments where recipeid = $recipeid";
-$result = mysql_query($query);
-$row=mysql_fetch_array($result);
+$stmt = $pdo->prepare("SELECT COUNT(commentid) FROM comments WHERE recipeid = :recipeid");
+$stmt->bindParam(':recipeid', $recipeid, PDO::PARAM_INT);
+$stmt->execute();
+$row = $stmt->fetch(PDO::FETCH_NUM);
+
 if ($row[0] == 0)
 {
    echo "No comments posted yet.&nbsp;&nbsp;\n";
-   echo "<a href=\"index.php?content=newcomment&id=$recipeid\">Add a comment</a>\n";
-   echo "&nbsp;&nbsp;&nbsp;<a href=\"print.php?id=$recipeid\" target=\"_blank\">Print recipe</a>\n";
+   echo "<a href=\"index.php?content=newcomment&id=$safe_recipeid\">Add a comment</a>\n";
+   echo "&nbsp;&nbsp;&nbsp;<a href=\"print.php?id=$safe_recipeid\" target=\"_blank\">Print recipe</a>\n";
    echo "<hr>\n";
 } else
 {
    $totrecords = $row[0];
    echo $row[0] . "\n";
    echo "&nbsp;comments posted.&nbsp;&nbsp;\n";
-   echo "<a href=\"index.php?content=newcomment&id=$recipeid\">Add a comment</a>\n";
-   echo "&nbsp;&nbsp;&nbsp;<a href=\"print.php?id=$recipeid\" target=\"_blank\">Print recipe</a>\n";
+   echo "<a href=\"index.php?content=newcomment&id=$safe_recipeid\">Add a comment</a>\n";
+   echo "&nbsp;&nbsp;&nbsp;<a href=\"print.php?id=$safe_recipeid\" target=\"_blank\">Print recipe</a>\n";
    echo "<hr>\n";
    echo "<h2>Comments:</h2>\n";
 
@@ -57,19 +61,18 @@ if ($row[0] == 0)
    $offset = ($thispage - 1) * $recordsperpage;
    $totpages = ceil($totrecords / $recordsperpage);
 
-   $query = "SELECT date,poster,comment from comments where recipeid = $recipeid order by commentid desc limit $offset,$recordsperpage";
-   $result = mysql_query($query) or die('Could not retrieve comments');
-   while($row = mysql_fetch_array($result, MYSQL_ASSOC))
-   {
+   $stmt = $pdo->prepare("SELECT date,poster,comment FROM comments WHERE recipeid = :recipeid ORDER BY commentid DESC LIMIT :offset, :recordsperpage");
+   $stmt->bindParam(':recipeid', $recipeid, PDO::PARAM_INT);
+   $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+   $stmt->bindParam(':recordsperpage', $recordsperpage, PDO::PARAM_INT);
+   $stmt->execute();
+   while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
        $date = $row['date'];
        $poster = $row['poster'];
-       $comment = $row['comment'];
-       $comment = nl2br($comment);
+       $comment = nl2br($row['comment']);
 
-       echo $date . " - posted by " . $poster . "\n";
-       echo "<br>\n";
-       echo $comment . "\n";
-       echo "<br><br>\n";
+       echo $date . " - posted by " . $poster . "<br>\n";
+       echo $comment . "<br><br>\n";
    }
 
 
@@ -79,34 +82,24 @@ if ($row[0] == 0)
       $prevpage = "<a href=\"index.php?content=showrecipe&id=$recipeid&page=$page\">Previous</a> ";
    } else
    {
-      $prevpage = "Previous";
-   }
-
    if ($totpages > 1)
    { 
       $bar = '';
-      for($page = 1; $page <= $totpages; $page++)
-      {
-         if ($page == $thispage)      
-         {
-            $bar .= " $page ";
-         } else
-         {
-            $bar .= " <a href=\"index.php?content=showrecipe&id=$recipeid&page=$page\">$page</a> ";
-         }
-      }
-   }
+    for ($page = 1; $page <= $totpages; $page++) {
+        $safe_page = htmlentities($page, ENT_QUOTES, 'UTF-8');
+        if ($page == $thispage) {
+            $bar .= " $safe_page ";
+        } else {
+            $bar .= " <a href=\"index.php?content=showrecipe&id=$safe_recipeid&page=$safe_page\">$safe_page</a> ";
+        }
+    }
 
-   if ($thispage < $totpages)
-   {
-      $page = $thispage + 1;
-      $nextpage = " <a href=\"index.php?content=showrecipe&id=$recipeid&page=$page\">Next</a>";
-   } else
-   {
-      $nextpage = "Next";
-   }
+    $safe_prev = htmlentities($thispage - 1, ENT_QUOTES, 'UTF-8');
+    $safe_next = htmlentities($thispage + 1, ENT_QUOTES, 'UTF-8');
+    $prevpage = ($thispage > 1) ? "<a href=\"index.php?content=showrecipe&id=$safe_recipeid&page=$safe_prev\">Previous</a> " : "Previous";
+    $nextpage = ($thispage < $totpages) ? " <a href=\"index.php?content=showrecipe&id=$safe_recipeid&page=$safe_next\">Next</a>" : "Next";
 
-   echo "GoTo: " . $prevpage . $bar . $nextpage;
+    echo "GoTo: " . $prevpage . $bar . $nextpage;
 }
 ?></div>
 </div>
