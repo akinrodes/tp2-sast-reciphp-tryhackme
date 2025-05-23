@@ -7,13 +7,14 @@ tags: [tryhackme, devsecops]     # TAG names should always be lowercase
 ---
 
 author: Claude MONWENAGNI
+
 project: DevSecOps PHP Challenge
 
 source:
   - tryhackme: DevSecOps Room
   - challenge: Personnel
 
-description: |
+description:
   Ce document retrace les étapes de sécurisation du fichier PHP [showrecipe.inc.php] récupéré lors de la room TryHackMe DevSecOps. J'ai voulu transformer ce code vulnérable en challenge personnel, en détectant et corrigeant les failles critiques (XSS et injection SQL) à l'aide de Semgrep et de bonnes pratiques DevSecOps.
 
 contexte:
@@ -30,13 +31,14 @@ outils_utilises:
 
 vulnerabilites_identifiees:
   - XSS (Cross-Site Scripting) :
-      description: |
+      description: 
         Les paramètres utilisateurs étaient insérés dans le HTML sans échappement, permettant l'exécution de code malicieux.
       exemples:
         - Lien "Add a comment" et "Print recipe" utilisant directement $recipeid dans l'URL.
         - Pagination générant des liens avec des paramètres utilisateurs non échappés.
+    
   - Injection SQL :
-      description: |
+      description: 
         Les paramètres utilisateurs étaient injectés directement dans les requêtes SQL, exposant à des attaques d'injection.
       exemples:
         - Récupération de la recette : SELECT ... WHERE recipeid = $recipeid
@@ -53,20 +55,23 @@ remediations_apportees:
       - Revue de tous les echo susceptibles de contenir des données utilisateur.
 
 exemple_code_avant:
-  sql_injection: |
+  sql_injection:
     $recipeid = $_GET['id'];
     $query = "SELECT ... WHERE recipeid = $recipeid";
     $result = mysql_query($query);
-  xss: |
+    
+  xss: 
     echo "<a href=\"index.php?content=newcomment&id=$recipeid\">Add a comment</a>";
 
 exemple_code_apres:
-  sql_injection: |
+  sql_injection:
     $recipeid = (int)$_GET['id'];
     $stmt = $pdo->prepare("SELECT ... WHERE recipeid = :recipeid");
     $stmt->bindParam(':recipeid', $recipeid, PDO::PARAM_INT);
     $stmt->execute();
-  xss: |
+
+    
+  xss: 
     $safe_recipeid = htmlentities($recipeid, ENT_QUOTES, 'UTF-8');
     echo "<a href=\"index.php?content=newcomment&id=$safe_recipeid\">Add a comment</a>";
 
@@ -85,7 +90,15 @@ analyse_semgrep:
   - Résultat attendu :
       - Plus aucune alerte critique sur XSS ou SQLi dans le fichier showrecipe.inc.php
 
-conclusion: |
+conclusion:
   Ce challenge m'a permis de mettre en pratique la remédiation de failles OWASP Top 10 sur du code PHP legacy, en utilisant des outils modernes (Semgrep, Docker) et des techniques professionnelles. Le fichier est désormais conforme aux bonnes pratiques DevSecOps et prêt à être utilisé comme exemple pédagogique ou démonstration technique.
 
----
+## NB: Pour aller plus vite : 
+1- Télécharger le repo : git clone https://github.com/akinrodes/tp2-sast-reciphp-tryhackme.git
+2- Revenez sur la version vulnérable du fichier :  git checkout 911623b374ce8fc597773e321f6ed04a19fbe00a
+3- Regarder le fichier concerné showrecipe.inc.php
+3- Lancer la commande pour ananlyser le fichier (pensez à adapter la commande en focntion de votre environnement de travail):
+      docker run --rm -v "${PWD}/reciphp:/src" returntocorp/semgrep semgrep --config=/src/semgrep-rules /src/showrecipe.inc.php 
+4- Revenez sur la version corrigée du fichier :  git checkout bc5b6cbf738e1add3ce9fe439c1929dd5d4d441e
+5- Lancer pour réanalyser:
+      docker run --rm -v "${PWD}/reciphp:/src" returntocorp/semgrep semgrep --config=/src/semgrep-rules /src/showrecipe.inc.php
