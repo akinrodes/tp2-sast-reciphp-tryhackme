@@ -100,7 +100,10 @@ git clone https://github.com/akinrodes/tp2-sast-reciphp-tryhackme.git
 ```
 
 
-2- Revenez sur la version vulnérable du fichier :  git checkout 911623b374ce8fc597773e321f6ed04a19fbe00a
+2- Revenez sur la version vulnérable du fichier :  
+```bash
+git checkout 911623b374ce8fc597773e321f6ed04a19fbe00a 
+```
 
 3- Regarder le fichier concerné showrecipe.inc.php
 
@@ -110,7 +113,10 @@ git clone https://github.com/akinrodes/tp2-sast-reciphp-tryhackme.git
 ```
      
 
-4- Revenez sur la version corrigée du fichier :  git checkout bc5b6cbf738e1add3ce9fe439c1929dd5d4d441e
+4- Revenez sur la version corrigée du fichier :  
+```bash
+git checkout bc5b6cbf738e1add3ce9fe439c1929dd5d4d441e 
+```
 
 5- Lancer pour réanalyser:
 ```bash
