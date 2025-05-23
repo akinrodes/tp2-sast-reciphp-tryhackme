@@ -1,14 +1,18 @@
-# tp2-sast-reciphp-tryhackme
-
 ---
-title: Remédiation XSS & SQL Injection sur showrecipe.inc.php
-author: Claude MONWENAGNI
-
+layout: post
+title: TryHackMe DevSecOps Room > Security in the Pipeline > SAST > Remédiation XSS & SQL Injection sur showrecipe.inc.php
 date: 2025-05-14
+categories: [devsecops]
+tags: [tryhackme, devsecops]     # TAG names should always be lowercase
+---
+
+author: Claude MONWENAGNI
 project: DevSecOps PHP Challenge
+
 source:
   - tryhackme: DevSecOps Room
-  - challenge: Personnel pendant la room
+  - challenge: Personnel
+
 description: |
   Ce document retrace les étapes de sécurisation du fichier PHP [showrecipe.inc.php] récupéré lors de la room TryHackMe DevSecOps. J'ai voulu transformer ce code vulnérable en challenge personnel, en détectant et corrigeant les failles critiques (XSS et injection SQL) à l'aide de Semgrep et de bonnes pratiques DevSecOps.
 
